@@ -153,9 +153,11 @@ def _add(a, b) -> u256:
 
 
 def _norm(text: str) -> str:
-    """For finding a quote in a page: case, quote marks, dashes and whitespace do not matter."""
+    """For finding a quote in a file: case, quote marks, dashes, whitespace and Markdown emphasis
+    or code marks (* _ `) do not matter, since a model quoting Markdown often drops them."""
     t = unicodedata.normalize("NFKC", text).lower()
-    t = re.sub(r"[‘’‛`´]", "'", t)
+    t = re.sub(r"[*_`]", "", t)
+    t = re.sub(r"[‘’‛´]", "'", t)
     t = re.sub(r"[“”„]", '"', t)
     t = re.sub(r"[‐-―]", "-", t)
     return " ".join(t.split())

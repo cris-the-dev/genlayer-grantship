@@ -90,19 +90,19 @@ and reading the contract back shows the change. GEN amounts use BigInt only. A c
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 genvm-lint check contracts/grant_ship.py
-pytest tests/direct -v                         # 36 tests
+pytest tests/direct -v                         # 37 tests
 python deploy/shrink.py contracts/grant_ship.py build/grant_ship.py --pack
 node tests/integration/bradbury.mjs build/grant_ship.py
 ```
 
-Bradbury rejects deploys above ~20 KB; deploy the packed build (28.4 KB → 8.4 KB). CI re-runs the direct tests on it.
+Bradbury rejects deploys above ~20 KB; deploy the packed build (28.5 KB → 8.4 KB). CI re-runs the direct tests on it.
 
-## Tests (36 direct)
+## Tests (37 direct)
 
 - **Opening** — field validation (title, repo, milestone shape, path, amount, deadline, exact sum); the grantee cannot be the funder.
 - **Claims** — met pays the grantee; the file is read at the named commit; not met is recorded and a later commit can claim; full SHA only, upper case normalised; a missing or too long file reverts.
 - **Deadlines** — no claim after it; anyone sends it back to the funder.
-- **Consensus** — agreement on the answer; the quote must be in each validator's copy; a missing file is agreed; LLM errors never agreed.
+- **Consensus** — agreement on the answer; the quote must be in each validator's copy (case, spacing and Markdown marks ignored); a missing file is agreed; LLM errors never agreed.
 - **Settlement** — delivered and failed payouts, recovery by the grantee, a transaction that is not this payout is rejected.
 
 ## License

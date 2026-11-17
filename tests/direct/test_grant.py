@@ -151,3 +151,8 @@ def test_settle_rejects_a_transaction_that_is_not_this_payout(kw, grant, direct_
     tx, fin = chain.pay(grant, 0, method, a, **{"delivered": False, **kw})
     with direct_vm.expect_revert():
         grant.settle_payout(0, tx, fin)
+
+def test_a_quote_without_the_markdown_marks_is_found(grant, direct_vm, direct_charlie):
+    claim(direct_vm, grant, direct_charlie, quote="Added the export command: tidepool export --csv writes every station reading to CSV.")
+    assert grant.get_grant(0)["milestones"][0]["status"] == "PAID"
+    assert direct_vm.run_validator()
