@@ -22,11 +22,33 @@ anyone  ── settle_payout(payout, tx, finalize_tx) / payee ── recover(to)
 ## Live deployment
 
 App: https://grantship.cristhedev.com (grants, milestones, every reading with its commit and quote; source in [`app/`](app/))  
-Testnet Bradbury Phase 2 (chainId 4221, GenVM v0.3): `__ADDR__`
+Testnet Bradbury Phase 2 (chainId 4221, GenVM v0.3): [`0xE29A3247E5C89e6297C250DaA2da2267c59D4C87`](https://explorer-bradbury.genlayer.com/address/0xE29A3247E5C89e6297C250DaA2da2267c59D4C87)
 
 ## Bradbury evidence
 
-Run by [`tests/integration/bradbury.mjs`](tests/integration/bradbury.mjs) once deployed; the table of transactions goes here.
+Run by [`tests/integration/bradbury.mjs`](tests/integration/bradbury.mjs) on Bradbury Phase 2 (all checks passed). Contract `0xE29A3247E5C89e6297C250DaA2da2267c59D4C87` (deploy [`0xefcf8dbb…`](https://explorer-bradbury.genlayer.com/tx/0xefcf8dbb53e5b62fda40968f4ad55049b4b58f457bef2bddb65d3d8c17ec3730)), code `build/grant_ship.py` (sha256 `d3a05eb6…`). Funder, grantee and a third account are separate. Grant #0 "RefundWatch v1.1" names the repository [`cris-the-dev/genlayer-refundwatch`](https://github.com/cris-the-dev/genlayer-refundwatch) and two milestones of 0.0001 GEN each, both checked against `README.md`: "Approved event sources" (30 days) and "Ticket tiers" (deadline minutes away).
+
+| Step | Transaction | Outcome |
+|---|---|---|
+| open a grant to oneself | [`0x99c3ddaa…`](https://explorer-bradbury.genlayer.com/tx/0x99c3ddaa7ad330b96854f158a76e1a62625c748946730eaf78f75009c28a48c0) | rejected: the funder cannot be the grantee |
+| open paying one milestone | [`0xbd972691…`](https://explorer-bradbury.genlayer.com/tx/0xbd9726914c9e9966f04a5687c71ad44f5aa467126d5db24d6515149ceac21f98) | rejected: the sum of the milestones must be sent |
+| open the grant (two milestones) | [`0x6d60ffb7…`](https://explorer-bradbury.genlayer.com/tx/0x6d60ffb761dd9dc2338e831cb695937e7451a0c4d4abd05ec9ac450874091aca) | ok: grant #0, 0.0002 GEN held |
+| reclaim milestone 2 early | [`0x0738d8d6…`](https://explorer-bradbury.genlayer.com/tx/0x0738d8d6e8182c1e0edd390cb56a55453de5cb22ff445081777a81997944b66d) | rejected: the deadline has not passed |
+| claim with a short commit | [`0xfc06cbc8…`](https://explorer-bradbury.genlayer.com/tx/0xfc06cbc8db1ee40c161ecc7ff4bd1c6b0b1edc5c7083679d1b1f8503b3228aef) | rejected: a commit must be a full 40-hex SHA |
+| claim milestone 1 at [`7d8ca2d`](https://github.com/cris-the-dev/genlayer-refundwatch/blob/7d8ca2dd11b454fb5837c760bb89491117c5d1e8/README.md) (v1.0.0) | [`0xc42af3b9…`](https://explorer-bradbury.genlayer.com/tx/0xc42af3b9e06be54b2c15467b11330017c582f62dfe65ff41de6cb36d4bec3c3a) | **`not_met`**: reading recorded, nothing paid, milestone still OPEN |
+| claim milestone 1 at [`5b12685`](https://github.com/cris-the-dev/genlayer-refundwatch/blob/5b126857f19cf28a7779fc733f97407eaa58da35/README.md) (v1.1.0) | [`0xc08f3526…`](https://explorer-bradbury.genlayer.com/tx/0xc08f3526cf0b231bd80e4aa642ba7fb06a47e8b624208fd1aaffb115b1203fd2) | **`met`**, quoted: “A page must be `https://` on an approved host or one of its subdomains, with no user name or port. Any other page, such as an organizer's own site, a look-alike domain or a host that merely contains an approved name, is refused before it is read,” PAID, 0.0001 GEN to the grantee = payout 0 |
+| claim milestone 1 again | [`0x20540acf…`](https://explorer-bradbury.genlayer.com/tx/0x20540acf7f96bb43e502c9d44fa3a5d996a9a38c300ec323850f05ea57838582) | rejected: already paid |
+| claim milestone 2 late | [`0xa33186f8…`](https://explorer-bradbury.genlayer.com/tx/0xa33186f8ec5fe5a1a94045f71983f5aa3aeb48a6da3f9fe1c9583e74d497073c) | rejected: the deadline has passed |
+| reclaim milestone 2 (anyone sends it) | [`0xdc603d1c…`](https://explorer-bradbury.genlayer.com/tx/0xdc603d1c87f9d6f2460a7ff260d4bd6066332095c8028b7f26efd3a510b3027d) | RECLAIMED, 0.0001 GEN to the funder = payout 1 (sent by the third account) |
+
+Every payout was settled from its own transfer once the paying transaction finalized:
+
+| Payout | Kind | Paid by | Finalized by | `settle_payout` | Result |
+|---|---|---|---|---|---|
+| 0 | milestone 1 → grantee | [`0xc08f3526…`](https://explorer-bradbury.genlayer.com/tx/0xc08f3526cf0b231bd80e4aa642ba7fb06a47e8b624208fd1aaffb115b1203fd2) | [`0x0824815c…`](https://explorer-bradbury.genlayer.com/tx/0x0824815c5c94132502759db19829421962ae7e09fbd85f88d69d73b3c59d8c16) | [`0x7af83af0…`](https://explorer-bradbury.genlayer.com/tx/0x7af83af05f0e088149b4f0380a229248a446c9ce19c60d215586cb89bfee3e6a) | DELIVERED |
+| 1 | milestone 2 reclaimed → funder | [`0xdc603d1c…`](https://explorer-bradbury.genlayer.com/tx/0xdc603d1c87f9d6f2460a7ff260d4bd6066332095c8028b7f26efd3a510b3027d) | [`0xa2166862…`](https://explorer-bradbury.genlayer.com/tx/0xa2166862710e1037a746dcd955e597c1bb4be7a97ccd24f1c0e1306f530c32fd) | [`0x3ab09731…`](https://explorer-bradbury.genlayer.com/tx/0x3ab09731c290e559ad3c817c7774e884e48c1a1e568a4b3c5d762b2596c53e83) | DELIVERED |
+
+Settling the same payout again is rejected ([`0xe8d8cdce…`](https://explorer-bradbury.genlayer.com/tx/0xe8d8cdce711d8f1ba746ff665b61701a3c1cc88238c5a858f58b8fefafc027fe), [`0x14026459…`](https://explorer-bradbury.genlayer.com/tx/0x14026459d9d92699421c8f4a7915569105f2c02e84d7117424e665dbe46f21d5)). On Bradbury a reverted payable transaction leaves its value in the contract; the contract never recorded it, so no one can withdraw it. The E2E checks the balance equals what the contract expects to hold plus exactly that value (0.0003 GEN).
 
 ## How a milestone is judged
 

@@ -97,7 +97,11 @@ const ok = async (...a) => { const r = await tx(...a); check(r.txExecutionResult
 // A rejection is a transaction that ran and reverted, never one that was not voted on.
 const fails = async (what, ...a) => check((await tx(...a)).txExecutionResultName === "FINISHED_WITH_ERROR", what);
 const read = async (functionName, args = []) => {
-  const v = await c0.readContract({ address, functionName, args });
+  let v;
+  for (let i = 0; ; i++) {
+    try { v = await c0.readContract({ address, functionName, args }); break; }
+    catch (e) { if (i >= 5 || !/fetch failed|ECONNRESET|timed out|socket/i.test(String(e?.details ?? e?.message))) throw e; await new Promise((r) => setTimeout(r, 10000)); }
+  }
   const plain = (x) => (x instanceof Map ? Object.fromEntries([...x].map(([k, y]) => [k, plain(y)])) : Array.isArray(x) ? x.map(plain) : x);
   return plain(v);
 };
